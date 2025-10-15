@@ -1,0 +1,54 @@
+services:
+  # 🐘 Base de datos PostgreSQL
+  postgres_db:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: mydb                # Nombre de la base de datos inicial
+      POSTGRES_USER: myuser            # Usuario de la base
+      POSTGRES_PASSWORD: 123           # Contraseña del usuario
+    ports:
+      - "5433:5432"                    # Puerto local 5433 → puerto interno 5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data  # 👈 persistencia local de datos
+    restart: unless-stopped            # Reinicia automáticamente si se detiene
+
+  # 🧠 pgAdmin (gestor visual de PostgreSQL)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com      # Usuario para iniciar sesión
+      PGADMIN_DEFAULT_PASSWORD: admin             # Contraseña para pgAdmin
+    ports:
+      - "5050:80"                                 # Acceso desde http://localhost:5050
+    volumes:
+      - ./data/pgadmin:/var/lib/pgadmin           # 👈 persistencia de configuraciones y sesiones
+    depends_on:
+      - postgres_db                               # Espera a que Postgres esté listo
+    restart: unless-stopped                       # Reinicia si el contenedor falla
+
+  # 🐍 Backend Django (API + lógica del servidor)
+  django_app:
+    build: ./backend                              # Usa el Dockerfile dentro de /backend
+    container_name: django_app
+    volumes:
+      - ./backend:/app                            # Sincroniza el código local con /app
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: 123
+      POSTGRES_HOST: postgres_db                  # 👈 nombre del servicio de la DB dentro de Docker
+    ports:
+      - "8000:8000"                               # Acceso a Django en http://localhost:8000
+    depends_on:
+      - postgres_db                               # Asegura que la base esté corriendo antes
+    restart: unless-stopped
+
+
+
+# 🗂️ Persistencia de datos locales
+# (Las carpetas ./data/postgres y ./data/pgadmin deben existir antes de levantar el entorno)
+# mkdir -p data/postgres data/pgadmin
+# sudo chmod -R 777 data/postgres data/pgadmin (Linux/WSL)
+

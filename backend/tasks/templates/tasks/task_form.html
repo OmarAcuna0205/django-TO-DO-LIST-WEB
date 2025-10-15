@@ -1,0 +1,40 @@
+{% extends 'tasks/base.html' %}
+
+{% block content %}
+    <h2 class="mb-4">{% if form.instance.pk %}Editar Tarea{% else %}Añadir Nueva Tarea{% endif %}</h2>
+    <hr class="mb-4">
+    
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="mb-4">
+                {# Añadimos la clase 'form-label' de Bootstrap a la etiqueta #}
+                <label for="{{ field.id_for_label }}" class="form-label fw-medium">{{ field.label }}</label>
+                
+                {# Renderizamos el campo del formulario (input, select, textarea, etc.) #}
+                {# Para que esto funcione, necesitamos añadir la clase 'form-control' desde forms.py (ver siguiente paso) #}
+                {{ field }}
+
+                {# Mostramos los errores de validación para cada campo con estilo de Bootstrap #}
+                {% if field.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in field.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# Mostramos el texto de ayuda si existe #}
+                {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <div class="mt-4 pt-3 border-top text-end">
+            <a href="{% url 'task_list' %}" class="btn btn-secondary me-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar Tarea</button>
+        </div>
+    </form>
+{% endblock %}

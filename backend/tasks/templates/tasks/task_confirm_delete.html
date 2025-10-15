@@ -1,0 +1,29 @@
+<!-- backend/tasks/templates/tasks/task_confirm_delete.html (Versión sin línea roja) -->
+
+{% extends 'tasks/base.html' %}
+
+{% block content %}
+    <h2 class="mb-3">Confirmar Eliminación</h2>
+    <p class="text-muted">Esta acción es permanente y no se puede deshacer.</p>
+    <hr class="mb-4">
+
+    <p class="text-center">¿Estás seguro de que quieres eliminar la tarea?</p>
+    
+    <!-- 
+        EL CAMBIO ESTÁ AQUÍ:
+        Se eliminaron las clases "border-start", "border-4", "border-danger" y "ps-3"
+        para quitar la línea roja de la izquierda.
+    -->
+    <blockquote class="blockquote my-4 mx-auto" style="max-width: 80%;">
+        <p class="mb-0 fs-4 text-center fst-italic">"{{ task.title }}"</p>
+    </blockquote>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="text-center mt-4">
+            <a href="{% url 'task_list' %}" class="btn btn-secondary me-2">No, cancelar</a>
+            <button type="submit" class="btn btn-danger">Sí, eliminar permanentemente</button>
+        </div>
+    </form>
+{% endblock %}
+

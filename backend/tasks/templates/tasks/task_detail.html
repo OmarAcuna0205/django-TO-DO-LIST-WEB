@@ -1,0 +1,36 @@
+<!-- backend/tasks/templates/tasks/task_detail.html -->
+{% extends 'tasks/base.html' %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h1 class="mb-1">{{ task.title }}</h1>
+            {% if task.category %}
+                <span class="badge bg-secondary">{{ task.category.name }}</span>
+            {% endif %}
+        </div>
+        {% if task.completed %}
+            <span class="badge bg-success fs-6">Completada</span>
+        {% else %}
+            <span class="badge bg-warning text-dark fs-6">Pendiente</span>
+        {% endif %}
+    </div>
+    <hr>
+    <p class="lead my-4">{{ task.description|linebreaks|default:"Esta tarea no tiene descripción." }}</p>
+    <ul class="list-group list-group-flush mb-4">
+        <li class="list-group-item ps-0"><strong>Prioridad:</strong> {{ task.get_priority_display }}</li>
+        <li class="list-group-item ps-0"><strong>Fecha de Creación:</strong> {{ task.created_at|date:"d M Y, H:i" }}</li>
+        {% if task.due_date %}
+            <li class="list-group-item ps-0 {% if task.is_overdue and not task.completed %}list-group-item-danger{% endif %}">
+                <strong>Fecha Límite:</strong> {{ task.due_date|date:"d M Y" }}
+                {% if task.is_overdue and not task.completed %}
+                    <strong class="ms-2">(¡Vencida!)</strong>
+                {% endif %}
+            </li>
+        {% endif %}
+    </ul>
+    <div class="text-end border-top pt-3 mt-4">
+        <a href="{% url 'task_list' %}" class="btn btn-secondary">Volver a la lista</a>
+        <a href="{% url 'task_update' task.pk %}" class="btn btn-primary">Editar Tarea</a>
+    </div>
+{% endblock %}

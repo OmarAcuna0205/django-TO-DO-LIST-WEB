@@ -1,0 +1,117 @@
+<!-- backend/tasks/templates/tasks/task_list.html (Versión con Diseño Final y Tareas Vencidas) -->
+
+{% extends 'tasks/base.html' %} {# Asegúrate de extender 'base.html' directamente si está en la raíz de templates o en el mismo nivel #}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mis Tareas</h1>
+        <a href="{% url 'task_create' %}" class="btn btn-primary">Añadir Nueva Tarea</a>
+    </div>
+
+    <form method="GET" class="mb-4">
+        <!-- Inputs ocultos para mantener los filtros activos al buscar -->
+        <input type="hidden" name="view_mode" value="{{ current_view_mode }}">
+        <input type="hidden" name="category" value="{{ request.GET.category }}">
+        <div class="input-group">
+            <input type="text" name="search-area" class="form-control" placeholder="Buscar tarea por título..." value="{{ search_query }}">
+            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+        </div>
+    </form>
+
+    <!-- LÍNEA 1: CONTADORES Y ORDENAMIENTO -->
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
+        <!-- Lado Izquierdo: Contadores -->
+        <div>
+            <span class="badge bg-secondary fs-6">Total: {{ total_tasks }}</span>
+            <span class="badge bg-warning fs-6">Pendientes: {{ pending_tasks }}</span>
+            <span class="badge bg-success fs-6">Completadas: {{ completed_tasks }}</span>
+        </div>
+        <!-- Lado Derecho: Dropdown de Ordenar -->
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Ordenar</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="?orderby=-priority&view_mode={{ current_view_mode }}&category={{ request.GET.category }}">Prioridad</a></li>
+                <li><a class="dropdown-item" href="?orderby=due_date&view_mode={{ current_view_mode }}&category={{ request.GET.category }}">Fecha Límite</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- LÍNEA 2: FILTROS DE CATEGORÍA Y BOTÓN DE VISTA -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- Lado Izquierdo: Filtros de Categoría -->
+        <div>
+            <strong class="me-2 d-none d-md-inline">Materia:</strong>
+            <a href="?view_mode={{ current_view_mode }}" class="badge text-decoration-none {% if not request.GET.category %}bg-dark text-white{% else %}bg-secondary{% endif %}">Todas</a>
+            {% for cat in all_categories %}
+                <a href="?view_mode={{ current_view_mode }}&category={{ cat.id }}" class="badge text-decoration-none {% if request.GET.category == cat.id|stringformat:'s' %}bg-dark text-white{% else %}bg-secondary{% endif %}">{{ cat.name }}</a>
+            {% endfor %}
+        </div>
+        <!-- Lado Derecho: Nuevo Botón de Icono (Ojo) -->
+        <div>
+            {% if current_view_mode == 'completed' %}
+                <a href="?view_mode=pending&category={{ request.GET.category }}" class="btn btn-sm btn-outline-secondary" title="Ocultar Completadas">
+                    <i class="bi bi-eye-slash"></i>
+                </a>
+            {% else %}
+                <a href="?view_mode=completed&category={{ request.GET.category }}" class="btn btn-sm btn-outline-secondary" title="Mostrar Completadas">
+                    <i class="bi bi-eye"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Lista de Tareas -->
+    <ul class="list-group list-group-flush">
+        {% for task in tasks %}
+            {# Eliminamos la clase 'list-group-item-danger' del <li> principal #}
+            <li class="list-group-item px-1">
+                <div class="row w-100 align-items-center">
+                    <div class="col-md-5">
+                        <h5>
+                            <a href="{% url 'task_detail' task.pk %}" class="text-decoration-none 
+                                {% if task.is_overdue and not task.completed %}text-danger{% else %}text-body{% endif %}">
+                                {% if task.is_overdue and not task.completed %}
+                                    <i class="bi bi-exclamation-triangle-fill me-2" title="Tarea Vencida"></i>
+                                {% endif %}
+                                {% if task.completed %}
+                                    <del class="text-muted">{{ task.title }}</del>
+                                {% else %}
+                                    {{ task.title }}
+                                {% endif %}
+                            </a>
+                        </h5>
+                        {% if task.category %}<span class="badge bg-secondary fw-normal">{{ task.category.name }}</span>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <small class="
+                            {% if task.is_overdue and not task.completed %}text-danger{% else %}text-muted{% endif %}">
+                            Prioridad: {{ task.get_priority_display }}
+                            {% if task.due_date %}
+                                | Límite: {{ task.due_date|date:"d M Y" }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="col-md-3 text-md-end">
+                        {% if task.completed %}
+                            <a href="{% url 'task_complete' task.pk %}" class="btn btn-sm btn-outline-warning">Marcar Pendiente</a>
+                        {% else %}
+                            <a href="{% url 'task_complete' task.pk %}" class="btn btn-sm btn-success">Completar</a>
+                        {% endif %}
+                        <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    </div>
+                </div>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-center p-4">
+                <h5 class="text-muted">
+                    {% if current_view_mode == 'completed' %}
+                        No hay tareas completadas para mostrar.
+                    {% else %}
+                        ¡Felicidades! No tienes tareas pendientes.
+                    {% endif %}
+                </h5>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
